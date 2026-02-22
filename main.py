@@ -3,7 +3,7 @@ import sys
 
 from dotenv import load_dotenv
 from google import genai
-
+from functions.get_file_content import get_file_content
 
 def main():
     load_dotenv()

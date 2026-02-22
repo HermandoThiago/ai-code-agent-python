@@ -3,7 +3,6 @@ import sys
 
 from dotenv import load_dotenv
 from google import genai
-from google.genai import types  # Types package for gemini ai
 
 
 def main():

@@ -2,6 +2,24 @@ import os
 
 
 def get_files_info(working_directory, directory="."):
+    """
+    Lists metadata for all items within a specific directory.
+
+    This function scans the target directory and returns a formatted string
+    containing the name, size, and type (file or directory) for each item found.
+    It includes a security check to ensure the target directory is contained
+    within the specified working directory.
+
+    Args:
+        working_directory (str): The base directory used for security validation.
+        directory (str, optional): The target directory to scan, relative to the
+            working_directory. Defaults to ".".
+
+    Returns:
+        str: A bulleted list of files and directories with their sizes and
+            directory status, or an error message if the path is outside
+            the allowed working directory.
+    """
     abs_working_dir = os.path.abspath(working_directory)
     abs_directory = os.path.abspath(os.path.join(working_directory, directory))
 

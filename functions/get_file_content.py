@@ -4,6 +4,22 @@ MAX_CHARACTERS = 10000
 
 
 def get_file_content(working_directory, file_path):
+    """
+    Reads the content of a file within a restricted working directory.
+
+    This function performs a security check to ensure the file path is within
+    the specified working directory to prevent path traversal attacks. It also
+    limits the output to a predefined maximum number of characters.
+
+    Args:
+        working_directory (str): The base directory where the file should be located.
+        file_path (str): The relative or absolute path to the file to be read.
+
+    Returns:
+        str: The content of the file if successful, or an error message starting
+            with 'Error:' or 'Exception reading file:'. If the file exceeds
+            MAX_CHARACTERS, the content is truncated with a notice.
+    """
     abs_working_dir = os.path.abspath(working_directory)
     abs_file_path = os.path.abspath(os.path.join(working_directory, file_path))
 

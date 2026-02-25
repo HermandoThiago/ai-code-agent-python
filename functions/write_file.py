@@ -1,7 +1,7 @@
 import os
 
 
-def write_file(working_directory, file_path, content):
+def write_file(working_directory: str, file_path: str, content: str):
     """
     Writes text content to a file within a restricted working directory.
 

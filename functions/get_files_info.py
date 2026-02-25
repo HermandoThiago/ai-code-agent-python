@@ -1,7 +1,7 @@
 import os
 
 
-def get_files_info(working_directory, directory="."):
+def get_files_info(working_directory: str, directory="."):
     """
     Lists metadata for all items within a specific directory.
 

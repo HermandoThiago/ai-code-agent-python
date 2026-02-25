@@ -3,7 +3,7 @@ import os
 MAX_CHARACTERS = 10000
 
 
-def get_file_content(working_directory, file_path):
+def get_file_content(working_directory: str, file_path: str):
     """
     Reads the content of a file within a restricted working directory.
 

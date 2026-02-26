@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from google.genai import types
+
 
 def run_python_file(working_directory: str, file_path: str, args: list[str]):
     """
@@ -58,3 +60,23 @@ def run_python_file(working_directory: str, file_path: str, args: list[str]):
             final_string += f"Process exited with code {output.returncode}"
     except Exception as error:
         return f'Error: executing Python file: {error}'
+
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Runs a python file with the python3 interpreter. Accepts. Accepts additional CLI args as an optional array.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="the file to run, relative from the working directory"
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(type=types.Type.STRING),
+                description="An optional array of strings to be used as the CLI args fot the Python files."
+            )
+        }
+    )
+)

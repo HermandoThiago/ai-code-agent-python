@@ -2,6 +2,11 @@ import os
 import sys
 
 from dotenv import load_dotenv
+
+from rich.prompt import Prompt
+from rich.console import Console
+from rich.panel import Panel
+
 from google import genai
 from google.genai import types
 
@@ -16,8 +21,20 @@ from functions.call_function import call_function
 def main():
     load_dotenv()
 
+    console = Console()
+
     API_KEY = os.environ.get("GEMINI_API_KEY")
-    MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME")
+    MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME", "gemini-2.5-flash")
+
+    if not API_KEY:
+        console.print("[bold red]Error: GEMINI KEY not found[/]")
+        return
+
+    console.print(Panel("""\n[dark blue]                                                                                                                                                                                                                                                                                                                                                                                                            
+      [ P Y T H O N   C O D E   A G E N T ]
+      ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      >> STATUS: [ BUILDING_MODULES... ]
+    \n"""))
 
     client = genai.Client(api_key=API_KEY)
 
@@ -35,21 +52,6 @@ def main():
         directory in your function calls as it is automatically injected for security reasons.
     """
 
-    if len(sys.argv) < 2:
-        print("I need a prompt!")
-        sys.exit(1)
-
-    verbose_flag = False
-
-    if len(sys.argv) == 3 and sys.argv[2] == "--verbose":
-        verbose_flag = True
-
-    prompt = sys.argv[1]
-
-    messages = [
-        types.Content(role="user", parts=[types.Part(text=prompt)])
-    ]
-
     available_functions = types.Tool(
         function_declarations=[
             schema_get_files_info,
@@ -59,34 +61,63 @@ def main():
         ]
     )
 
-    config = types.GenerateContentConfig(
-        tools=[available_functions],
-        system_instruction=system_prompt
-    )
+    history = []
+    verbose_flag = "--verbose" in sys.argv
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config=config
-    )
+    console.print(Panel("[bold green]Agente de IA Pronto! Como posso ajudar no seu código hoje?[/]"))
+    
+    while True:
+        user_input = Prompt.ask("\n[bold blue]Você[/]")
 
-    if response is None or response.usage_metadata is None:
-        print("response is malformed")
-        return
+        if user_input.lower() in ["exit", "quit"]:
+            break
 
-    if verbose_flag:
-        print(f"User prompt: {prompt}")
-        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        # Adiciona a mensagem do usuário ao histórico
+        history.append(
+            types.Content(
+                role="user", 
+                parts=[types.Part(text=user_input)]
+            )
+        )
 
-    if response.function_calls:
-        for function_call_part in response.function_calls:
-            result = call_function(function_call_part, verbose_flag)
+        while True:  # Loop de iteração do agente (pensar -> agir -> observar)
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=history,
+                config=types.GenerateContentConfig(
+                    tools=[available_functions],
+                    system_instruction=system_prompt
+                )
+            )
 
-            print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-            print(result)
-    else:
-        print(response.text)
+
+            history.append(response.candidates[0].content)
+
+
+            if response.text:
+                console.print(f"\n[bold magenta]Gemini:[/] {response.text}")
+
+
+            if not response.function_calls:
+                break
+
+
+            for function_call in response.function_calls:
+                console.print(f"[yellow]⚙️ Executando: {function_call.name}...[/]")
+                
+                result = call_function(function_call, verbose_flag)
+                
+                history.append(types.Content(
+                    role="tool", # No SDK novo, pode ser necessário ajustar o papel ou usar part específica
+                    parts=[types.Part(function_response=types.FunctionResponse(
+                        name=function_call.name,
+                        response={"result": result}
+                    ))]
+                ))
+                
+                if verbose_flag:
+                    console.print(f"[dim]Resultado da função: {result}[/]")
+
 
 
 main()
